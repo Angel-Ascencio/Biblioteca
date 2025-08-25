@@ -1,6 +1,25 @@
+// Verificar sesion activa
+async function verificarSesion() {
+    try {
+        const res = await fetch('http://localhost:8080/bibliotecaproyecto/api/acceso/sesion', {
+            method: "POST"
+        });
+        const data = await res.json();
+        if (!data.loggedIn) {
+            window.location.href = 'index.html';
+        }
+    } catch (error) {
+        console.error("Error verificando sesión:", error);
+        window.location.href = 'index.html';
+    }
+}
+
+verificarSesion();
+
 let libros = [];
 let currentPageLibros = 1;
 const rowsPerPageLibros = 10;
+
 //Carga los libros de acuerdo a la paginacion
 function renderLibros(page = 1) {
     const start = (page - 1) * rowsPerPageLibros;
@@ -36,6 +55,7 @@ function renderLibros(page = 1) {
     document.getElementById("tblLibro").innerHTML = mostrar;
     renderPaginationLibros();
 }
+
 //Controles de paginación (Anterior, Siguiente, y página actual)
 function renderPaginationLibros() {
     const totalPages = Math.ceil(libros.length / rowsPerPageLibros);
@@ -77,23 +97,25 @@ function renderPaginationLibros() {
     });
     pagination.appendChild(nextBtn);
 }
+
 //Cargar los libros
 function cargarCatLibros() {
     fetch("http://localhost:8080/bibliotecaproyecto/api/libro/getAll")
             .then(response => response.json())
             .then(response => {
                 libros = response;
-                console.log("Libros cargados desde la API:", libros);
+                //console.log("Libros cargados desde la API:", libros);
                 renderLibros(currentPageLibros);
             });
 }
+
 //Carga los datos del modal cuando  se modifica
 function modificarLibro(i) {
     console.log("Índice seleccionado para modificar: ", i);
     const libro = libros[i];
 
     if (libro) {
-        console.log("Datos del libro seleccionado: ", libro);
+        //console.log("Datos del libro seleccionado: ", libro);
 
         document.getElementById("id").value = libro.id_libro || '';
         document.getElementById("li").value = libro.nombre_libro || '';
@@ -118,14 +140,15 @@ function modificarLibro(i) {
         console.error("Error: No se encontró el libro en la posición ", i);
     }
 }
+
 //Cargar los usuarios
 function mostrarLibro(id) {
     const libro = libros.find(libro => libro.id_libro === id);
-    console.log(libro);
+    //console.log(libro);
 
     if (libro) {
         let pdfBase64 = libro.archivo_pdf;
-        console.log("PDF Base64:", pdfBase64);
+        //console.log("PDF Base64:", pdfBase64);
 
         if (pdfBase64) {
             // Verifica si el PDF tiene el prefijo
@@ -155,6 +178,7 @@ function mostrarLibro(id) {
         console.error("No se encontró el libro con ID:", id);
     }
 }
+
 //funcion para desactivar un usuario
 function eliminarLibro(i) {
     let idLibros = libros[i].id_libro;
@@ -174,6 +198,7 @@ function eliminarLibro(i) {
                 Swal.fire("Error", "No se pudo eliminar el libro. Inténtalo de nuevo.", "error");
             });
 }
+
 //funcion para activar
 function activarLibro(i) {
     let idLibros = libros[i].id_libro;
@@ -193,6 +218,7 @@ function activarLibro(i) {
                 Swal.fire("Error", "No se pudo activar el libro. Inténtalo de nuevo.", "error");
             });
 }
+
 //funcion para insertar
 function insertarLibro() {
     let nombreLibro = document.getElementById("libro").value;
@@ -258,6 +284,7 @@ function insertarLibro() {
 
     reader.readAsDataURL(pdfFile);
 }
+
 // Función para convertir el archivo PDF seleccionado a Base64 y actualizar el textarea
 document.getElementById("pdf").addEventListener("change", function (event) {
     const file = event.target.files[0];
@@ -272,16 +299,17 @@ document.getElementById("pdf").addEventListener("change", function (event) {
             // Eliminar el prefijo 'data:application/pdf;base64,'
             const base64WithoutPrefix = base64String.split(',')[1];
             document.getElementById("link").value = base64WithoutPrefix;
-            console.log("PDF convertido a Base64 sin prefijo:", base64WithoutPrefix);
+            //console.log("PDF convertido a Base64 sin prefijo:", base64WithoutPrefix);
 
             // Convertir Base64 a Blob
             const blob = base64ToBlob(base64String, 'application/pdf');
-            console.log("PDF convertido a Blob:", blob);
+            //console.log("PDF convertido a Blob:", blob);
         };
 
         reader.readAsDataURL(file);
     }
 });
+
 // Función para convertir Base64 a Blob
 function base64ToBlob(base64, type) {
     const byteCharacters = atob(base64.split(',')[1]);
@@ -292,6 +320,7 @@ function base64ToBlob(base64, type) {
     const byteArray = new Uint8Array(byteNumbers);
     return new Blob([byteArray], {type: type});
 }
+
 // Función para modificar el libro y actualizar el PDF en Base64
 function moddLibro() {
     let idLibros = document.getElementById("id").value;
@@ -345,6 +374,7 @@ function moddLibro() {
 
     limpiarCampo();
 }
+
 //funcion para activos/inactivos
 function selecionarLibro() {
     let checkbox = document.getElementById("chkestatus");
@@ -359,6 +389,7 @@ function selecionarLibro() {
             })
             .catch(error => console.error("Error al cargar libros:", error));
 }
+
 //funcion para buscar
 function buscarLibro() {
     let busqueda = document.getElementById("campoBusqueda").value.trim();
@@ -380,6 +411,7 @@ function buscarLibro() {
             })
             .catch(error => console.error("Error al buscar libros:", error));
 }
+
 //funcion para limpiar los campos
 function limpiarCampo() {
     var nombreLibro = document.getElementById('libro');
@@ -396,19 +428,38 @@ function limpiarCampo() {
     estatus.value = '';
     pdf.value = '';
 }
+
 //funcion para recargar la tabla
 function recargarTabla() {
     cargarCatLibros();
 }
+
 //funcion para cerrar el modal de actualizar
 function cerrarModalupdate() {
     const modal = document.getElementById('formularioModal2');
     const modalInstance = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
     modalInstance.hide();
 }
+
 //funcion para cerrar el modal de insertar
 function cerrarModalInsert() {
     const modal = document.getElementById('formularioModal1');
     const modalInstance = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
     modalInstance.hide();
 }
+
+// Funcion para cerrar sesión
+async function cerrarSesion() {
+    try {
+        await fetch('http://localhost:8080/bibliotecaproyecto/api/acceso/logout', {method: "POST"});
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error("Error cerrando sesion:", error);
+        Swal.fire("Error", "No se pudo cerrar sesion.", "error");
+    }
+}
+
+//Para el boton de cerrar sesión
+document.getElementById("btnCerrarSesion").addEventListener("click", function () {
+    cerrarSesion();
+});

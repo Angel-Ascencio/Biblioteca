@@ -21,14 +21,34 @@ public class RESTAcceso {
     @Path("login")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public Response login(@FormParam("u") @DefaultValue("") String u, @FormParam("c") @DefaultValue("") String c) {
-        Usuario us = null;
-        Gson gson = new Gson();
+    public Response login(@FormParam("u") @DefaultValue("") String u,
+            @FormParam("c") @DefaultValue("") String c) {
 
         ControllerLogin ca = new ControllerLogin();
-        us = ca.logIn(u, c);
-        String out = gson.toJson(us);
+        Usuario us = ca.logIn(u, c);
 
+        if (!"Error".equals(us.getRol())) {
+            org.utl.model.SessionManager.iniciarSesion(us);
+        }
+
+        return Response.ok(new Gson().toJson(us)).build();
+    }
+
+    @Path("sesion")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response verificarSesion() {
+        boolean activa = org.utl.model.SessionManager.sesionActiva();
+        String out = "{\"loggedIn\":" + activa + "}";
         return Response.ok(out).build();
     }
+
+    @Path("logout")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response logout() {
+        org.utl.model.SessionManager.cerrarSesion();
+        return Response.ok("{\"logout\":true}").build();
+    }
+
 }

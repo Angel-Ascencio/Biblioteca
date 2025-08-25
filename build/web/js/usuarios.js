@@ -1,6 +1,25 @@
+// Verificar sesion activa
+async function verificarSesion() {
+    try {
+        const res = await fetch('http://localhost:8080/bibliotecaproyecto/api/acceso/sesion', {
+            method: "POST"
+        });
+        const data = await res.json();
+        if (!data.loggedIn) {
+            window.location.href = 'index.html';
+        }
+    } catch (error) {
+        console.error("Error verificando sesión:", error);
+        window.location.href = 'index.html';
+    }
+}
+
+verificarSesion();
+
 let usuarios = [];
 let currentPage = 1;
 const rowsPerPage = 10;
+
 //Carga los libros de acuerdo a la paginacion
 function renderTable(page = 1) {
     const start = (page - 1) * rowsPerPage;
@@ -16,7 +35,6 @@ function renderTable(page = 1) {
         if (paginatedUsers[i].estatus == mostrarEstatus) {
             mostrar += '<tr>';
             mostrar += '<td>' + paginatedUsers[i].nombreUsuario + '</td>';
-            mostrar += '<td>' + paginatedUsers[i].contrasenia + '</td>';
             mostrar += '<td>' + paginatedUsers[i].rol + '</td>';
             mostrar += '<td>' + paginatedUsers[i].email + '</td>';
 
@@ -35,6 +53,7 @@ function renderTable(page = 1) {
     document.getElementById("tblUsuario").innerHTML = mostrar;
     renderPagination();
 }
+
 //Controles de paginación (Anterior, Siguiente, y página actual)
 function renderPagination() {
     const totalPages = Math.ceil(usuarios.length / rowsPerPage);
@@ -76,23 +95,25 @@ function renderPagination() {
     });
     pagination.appendChild(nextBtn);
 }
+
 //Cargar los usuarios
 function cargarCatUsuarios() {
     fetch("http://localhost:8080/bibliotecaproyecto/api/usuario/getAll")
             .then(response => response.json())
             .then(response => {
                 usuarios = response;
-                console.log("Usuarios cargados desde la API:", usuarios);
+                //console.log("Usuarios cargados desde la API:", usuarios);
                 renderTable(currentPage);
             });
 }
+
 //Carga los datos del modal cuando  se modifica
 function modificarUsuario(i) {
-    console.log("Índice seleccionado para modificar: ", i);
+    //console.log("Índice seleccionado para modificar: ", i);
     const usuario = usuarios[i];
 
     if (usuario) {
-        console.log("Datos del usuario seleccionado: ", usuario);
+        //console.log("Datos del usuario seleccionado: ", usuario);
 
         document.getElementById("id").value = usuario.idUsuario || '';
         document.getElementById("no").value = usuario.nombreUsuario || '';
@@ -106,6 +127,7 @@ function modificarUsuario(i) {
         console.error("Error: No se encontró el usuario en la posición ", i);
     }
 }
+
 //funcion para desactivar un usuario
 function eliminarUsuario(i) {
     if (i < 0 || i >= usuarios.length) {
@@ -114,7 +136,7 @@ function eliminarUsuario(i) {
     }
 
     let idUsuarios = usuarios[i].idUsuario;
-    console.log("ID de usuario a eliminar:", idUsuarios);
+    //console.log("ID de usuario a eliminar:", idUsuarios);
 
     fetch("http://localhost:8080/bibliotecaproyecto/api/usuario/delete?idUsuarios=" + idUsuarios)
             .then(response => {
@@ -132,6 +154,7 @@ function eliminarUsuario(i) {
                 Swal.fire("Error", "No se pudo eliminar el usuario. Inténtalo de nuevo.", "error");
             });
 }
+
 //funcion para activar
 function activarUsuario(i) {
     if (i < 0 || i >= usuarios.length) {
@@ -139,7 +162,7 @@ function activarUsuario(i) {
         return;
     }
     let idUsuarios = usuarios[i].idUsuario;
-    console.log("ID de usuario a activar:", idUsuarios);
+    //console.log("ID de usuario a activar:", idUsuarios);
     fetch("http://localhost:8080/bibliotecaproyecto/api/usuario/activar?idUsuario=" + idUsuarios)
             .then(response => {
                 if (!response.ok) {
@@ -156,6 +179,7 @@ function activarUsuario(i) {
                 Swal.fire("Error", "No se pudo activar el usuario. Inténtalo de nuevo.", "error");
             });
 }
+
 //funcion para insertar
 function insertarUsuario() {
     let nombre = document.getElementById("nombre").value;
@@ -217,6 +241,7 @@ function insertarUsuario() {
             });
     limpiarCampos()
 }
+
 //funcion para actualizar
 function moddUsuario() {
 
@@ -264,6 +289,7 @@ function moddUsuario() {
                 Swal.fire("Problemas para actualización el usuario", error.message, "error");
             });
 }
+
 //funcion para activos/inactivos
 function selecionarUsuario() {
     let checkbox = document.getElementById("chkestatus");
@@ -290,6 +316,7 @@ function selecionarUsuario() {
                 .catch(error => console.error("Error al cargar usuarios activos:", error));
     }
 }
+
 //funcion para buscar
 function buscarUsuario() {
     let busqueda = document.getElementById("campoBusqueda").value;
@@ -311,6 +338,7 @@ function buscarUsuario() {
             })
             .catch(error => console.error("Error al buscar usuarios:", error));
 }
+
 //funcion para limpiar los campos
 function limpiarCampos() {
     var nombre = document.getElementById('nombre');
@@ -325,19 +353,38 @@ function limpiarCampos() {
     rol.value = '';
     email.value = '';
 }
+
 //funcion para recargar la tabla
 function recargarTabla() {
     cargarCatUsuarios();
 }
+
 //funcion para cerrar el modal de actualizar
 function cerrarModalupdate() {
     const modal = document.getElementById('formularioModal2');
     const modalInstance = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
     modalInstance.hide();
 }
+
 //funcion para cerrar el modal de insertar
 function cerrarModalInsert() {
     const modal = document.getElementById('formularioModal1');
     const modalInstance = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
     modalInstance.hide();
 }
+
+// Funcion para cerrar sesión
+async function cerrarSesion() {
+    try {
+        await fetch('http://localhost:8080/bibliotecaproyecto/api/acceso/logout', {method: "POST"});
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error("Error cerrando sesion:", error);
+        Swal.fire("Error", "No se pudo cerrar sesion.", "error");
+    }
+}
+
+//Para el boton de cerrar sesión
+document.getElementById("btnCerrarSesion").addEventListener("click", function () {
+    cerrarSesion();
+});

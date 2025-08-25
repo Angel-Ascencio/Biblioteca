@@ -2,13 +2,13 @@ DROP DATABASE IF EXISTS biblioteca;
 CREATE DATABASE biblioteca;
 USE biblioteca ;
 
-create table usuario(
-	idUsuario int not null auto_increment primary key,
-    nombreUsuario varchar(20) not null,
+CREATE TABLE usuario(
+    idUsuario INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    nombreUsuario VARCHAR(20) NOT NULL,
     contrasenia varchar(20) not null,
-    estatus INT NOT NULL DEFAULT 1, -- 1 activo 0 inactivo
-    rol varchar (20) not null,
-    email varchar (100) not null
+    estatus INT NOT NULL DEFAULT 1,    -- 1 activo, 0 inactivo
+    rol VARCHAR(20) NOT NULL,
+    email VARCHAR(100) NOT NULL
 );
 
 create table libros(
@@ -81,7 +81,7 @@ CREATE PROCEDURE insertarUsuario(
     OUT var_idUsuario INT
 )
 BEGIN
-    -- que no sea null
+    -- Validar que los parametros no sean NULL
     IF var_nombreUsuario IS NULL OR TRIM(var_nombreUsuario) = '' THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'El nombre de usuario no puede ser nulo';
@@ -107,8 +107,19 @@ BEGIN
             SET MESSAGE_TEXT = 'El estatus no puede ser nulo';
     END IF;
 
-    INSERT INTO usuario (nombreUsuario, contrasenia, estatus, rol, email)
-    VALUES (var_nombreUsuario, var_contrasenia, var_estatus, var_rol, var_email);
+    INSERT INTO usuario (
+        nombreUsuario,
+        contrasenia,
+        estatus,
+        rol,
+        email
+    ) VALUES (
+        var_nombreUsuario,
+        var_contrasenia,
+        var_estatus,
+        var_rol,
+        var_email
+    );
 
     SET var_idUsuario = LAST_INSERT_ID();
 END$$
@@ -116,6 +127,7 @@ END$$
 DELIMITER ;
 -- -----------------------------------------------------------------------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS modificarUsuario;
+
 DELIMITER $$
 
 CREATE PROCEDURE modificarUsuario(
@@ -127,7 +139,7 @@ CREATE PROCEDURE modificarUsuario(
     IN var_email VARCHAR(100)
 )
 BEGIN
-    -- Validaciones
+    -- Validar que los parametros de entrada no sean NULL
     IF var_idUsuario IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El ID de usuario es requerido';
     END IF;
@@ -152,7 +164,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El email es requerido';
     END IF;
 
-    -- Actualización
     UPDATE usuario
     SET 
         nombreUsuario = var_nombreUsuario,
@@ -172,7 +183,7 @@ CREATE PROCEDURE insertarLibro(
     IN var_autor VARCHAR(100),   
     IN var_genero VARCHAR(50),   
     IN var_estatus INT,   
-    IN var_archivo_pdf LONGTEXT,
+    IN var_archivo_pdf MEDIUMBLOB,
     OUT var_id_libro INT
 )
 BEGIN
@@ -186,14 +197,14 @@ BEGIN
     END IF;
 
     IF var_genero IS NULL OR TRIM(var_genero) = '' THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El género es requerido';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El genero es requerido';
     END IF;
 
     IF var_estatus IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estatus es requerido';
     END IF;
 
-    IF var_archivo_pdf IS NULL OR TRIM(var_archivo_pdf) = '' THEN
+    IF var_archivo_pdf IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El archivo PDF es requerido';
     END IF;
 
@@ -205,18 +216,22 @@ END
 $$
 DELIMITER ;
 -- -----------------------------------------------------------------------------------------------------------------------------
-
 DROP PROCEDURE IF EXISTS modificarLibro;
 DELIMITER $$
 CREATE PROCEDURE modificarLibro(
-    IN var_id_libro INT,               -- 1
-    IN var_nombre_libro VARCHAR(100),  -- 2
-    IN var_autor VARCHAR(100),        -- 3
-    IN var_genero VARCHAR(50),        -- 4
-    IN var_estatus INT,               -- 5
-    IN var_archivo_pdf LONGTEXT               -- 6
+    IN var_id_libro INT, 
+    IN var_nombre_libro VARCHAR(100),
+    IN var_autor VARCHAR(100),
+    IN var_genero VARCHAR(50),
+    IN var_estatus INT,
+    IN var_archivo_pdf MEDIUMBLOB
 )
 BEGIN
+    -- Validación básica
+    IF var_id_libro IS NULL OR var_id_libro <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El ID del libro es inválido';
+    END IF;
+
     -- Actualizar los datos del libro en la tabla libros
     UPDATE libros
     SET 
@@ -228,9 +243,10 @@ BEGIN
     WHERE id_libro = var_id_libro;
 END
 $$
+
 DELIMITER ;
 -- ------------------------------------------------------------------------------------------------------------------------------------------
-
+-- ----------------------------------------------------------------------------------------------------------------------------------
 select * from vista_usuario_activo;
 select * from vista_libros;
 select * from vista_usuario;

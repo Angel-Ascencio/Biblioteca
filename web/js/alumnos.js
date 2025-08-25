@@ -1,3 +1,21 @@
+// Verificar sesion activa
+async function verificarSesion() {
+    try {
+        const res = await fetch('http://localhost:8080/bibliotecaproyecto/api/acceso/sesion', {
+            method: "POST"
+        });
+        const data = await res.json();
+        if (!data.loggedIn) {
+            window.location.href = 'index.html';
+        }
+    } catch (error) {
+        console.error("Error verificando sesión:", error);
+        window.location.href = 'index.html';
+    }
+}
+
+verificarSesion();
+
 let libros = [];
 let librosFiltrados = [];
 let currentPageLibro = 1;
@@ -26,6 +44,7 @@ function renderTableLibros(page = 1) {
     document.getElementById("tblLibro").innerHTML = mostrar;
     renderPaginationLibros();// Actualiza los controles de paginación
 }
+
 //Controles de paginación (Anterior, Siguiente, y página actual)
 function renderPaginationLibros() {
     const totalPages = Math.ceil(librosFiltrados.length / rowsPerPageLibro);
@@ -64,6 +83,7 @@ function renderPaginationLibros() {
     });
     pagination.appendChild(nextBtn);
 }
+
 //Cargar los libros
 function cargarCatLibros() {
     fetch("http://localhost:8080/bibliotecaproyecto/api/libro/getAllPublicosTodos")
@@ -71,7 +91,7 @@ function cargarCatLibros() {
             .then(response => {
                 libros = response;
                 librosFiltrados = libros;
-                console.log("Libros cargados desde la API:", libros);
+                //console.log("Libros cargados desde la API:", libros);
                 renderTableLibros(currentPageLibro);
             });
 }
@@ -79,11 +99,11 @@ function cargarCatLibros() {
 //Funcion para mostrar el libro
 function mostrarLibro(index) {
     const libro = libros[index];
-    console.log(libro);
+    //console.log(libro);
 
     if (libro) {
         let pdfBase64 = libro.archivo;
-        console.log("PDF Base64:", pdfBase64);
+        //console.log("PDF Base64:", pdfBase64);
 
         if (pdfBase64) {
             // Verifica si el PDF tiene el prefijo de tipo de datos
@@ -115,17 +135,6 @@ function mostrarLibro(index) {
     }
 }
 
-//// Funcion para convertir Base64 a Blob
-//function base64ToBlob(base64, type) {
-//    const byteCharacters = atob(base64.split(',')[1]); // deco Base64
-//    const byteNumbers = new Array(byteCharacters.length);
-//    for (let i = 0; i < byteCharacters.length; i++) {
-//        byteNumbers[i] = byteCharacters.charCodeAt(i);
-//    }
-//    const byteArray = new Uint8Array(byteNumbers);
-//    return new Blob([byteArray], { type: type }); // crear blob
-//}
-
 // Buscar con filtrado dinamico
 function buscarLibros() {
     const buscarTexto = document.getElementById('buscarLibro').value.toLowerCase();
@@ -142,3 +151,19 @@ function buscarLibros() {
     currentPageLibro = 1; // reinicia a la primera página
     renderTableLibros(currentPageLibro);
 }
+
+// Funcion para cerrar sesión
+async function cerrarSesion() {
+    try {
+        await fetch('http://localhost:8080/bibliotecaproyecto/api/acceso/logout', {method: "POST"});
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error("Error cerrando sesion:", error);
+        Swal.fire("Error", "No se pudo cerrar sesion.", "error");
+    }
+}
+
+//Para el boton de cerrar sesión
+document.getElementById("btnCerrarSesion").addEventListener("click", function () {
+    cerrarSesion();
+});

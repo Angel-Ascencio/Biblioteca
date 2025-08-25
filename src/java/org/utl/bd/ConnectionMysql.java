@@ -19,7 +19,7 @@ public class ConnectionMysql {
      */
     public Connection open() {
         //datos para conectar con la base de datos
-        
+
         //Ingresa tu usuario y contraseña de base de datos
         String user = "usuario";
         String password = "contraseña";

@@ -13,6 +13,7 @@ import jakarta.ws.rs.core.Response;
 import java.util.List;
 import org.utl.controller.ControllerUsuario;
 import org.utl.model.Usuario;
+import org.utl.model.SessionManager; // IMPORTANTE: importar tu SessionManager
 
 /**
  *
@@ -23,9 +24,17 @@ public class RESTUsuarios {
 
     private ControllerUsuario controllerusuario;
 
-    //    Constructor inicializa el controller del usuarios
     public RESTUsuarios() {
         controllerusuario = new ControllerUsuario();
+    }
+
+    private Response verificarSesion() {
+        if (!SessionManager.sesionActiva()) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                           .entity("{\"error\":\"Acceso no autorizado\"}")
+                           .build();
+        }
+        return null;
     }
 
     //Todos
@@ -33,11 +42,12 @@ public class RESTUsuarios {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAll() {
+        Response sesion = verificarSesion();
+        if (sesion != null) return sesion;
+
         String out = "";
         try {
-            ControllerUsuario objCc = new ControllerUsuario();
-            List<Usuario> listaLibros = objCc.obtenerUsuarios();
-
+            List<Usuario> listaLibros = controllerusuario.obtenerUsuarios();
             Gson objGson = new Gson();
             out = objGson.toJson(listaLibros);
             if (listaLibros == null || listaLibros.isEmpty()) {
@@ -55,6 +65,9 @@ public class RESTUsuarios {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Response insert(@FormParam("u") @DefaultValue("") String usuarioJson) {
+        Response sesion = verificarSesion();
+        if (sesion != null) return sesion;
+
         Gson gson = new Gson();
         Usuario usuario = gson.fromJson(usuarioJson, Usuario.class);
 
@@ -78,6 +91,9 @@ public class RESTUsuarios {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response buscar(@QueryParam("valor") String valor) {
+        Response sesion = verificarSesion();
+        if (sesion != null) return sesion;
+
         List<Usuario> listaUsuarios = controllerusuario.buscarUsuario(valor);
         Gson objGson = new Gson();
         String out = objGson.toJson(listaUsuarios);
@@ -89,6 +105,9 @@ public class RESTUsuarios {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Response update(@FormParam("u") @DefaultValue("") String usuario) {
+        Response sesion = verificarSesion();
+        if (sesion != null) return sesion;
+
         Gson objGson = new Gson();
         Usuario u = objGson.fromJson(usuario, Usuario.class);
 
@@ -112,10 +131,12 @@ public class RESTUsuarios {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response delete(@QueryParam("idUsuarios") @DefaultValue("0") String idUsuarios) throws Exception {
+        Response sesion = verificarSesion();
+        if (sesion != null) return sesion;
+
         Usuario usuario = new Usuario();
         usuario.setIdUsuario(Integer.parseInt(idUsuarios));
-        ControllerUsuario objCc = new ControllerUsuario();
-        objCc.desactivarUsuario(usuario);
+        controllerusuario.desactivarUsuario(usuario);
         String out = "{\"result\":\"Usuario desactivado con éxito\"}";
         return Response.ok(out).build();
     }
@@ -125,6 +146,9 @@ public class RESTUsuarios {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response activar(@QueryParam("idUsuario") @DefaultValue("0") String idUsuario) throws Exception {
+        Response sesion = verificarSesion();
+        if (sesion != null) return sesion;
+
         Usuario usuario = new Usuario();
         usuario.setIdUsuario(Integer.parseInt(idUsuario));
         controllerusuario.activarUsuario(usuario);
@@ -137,11 +161,12 @@ public class RESTUsuarios {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response seleccionar(@QueryParam("val") @DefaultValue("") String val) {
-        String out = "";
+        Response sesion = verificarSesion();
+        if (sesion != null) return sesion;
+
         List<Usuario> listaLibros = controllerusuario.seleccionarUsuarioPorEstatus(val);
         Gson objGson = new Gson();
-        out = objGson.toJson(listaLibros);
+        String out = objGson.toJson(listaLibros);
         return Response.ok(out).build();
     }
-
 }

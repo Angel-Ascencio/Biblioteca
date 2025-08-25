@@ -71,6 +71,7 @@ function Ingresar() {
 var m1 = false;
 var m2 = false;
 
+//Para validar
 function validarCampos() {
 
     const usuario = document.getElementById('usuario').value;
@@ -110,7 +111,9 @@ function validarCampos() {
     }
 }
 
+//Para el boton de iniciar sesion
 document.getElementById("iniciarSesion").addEventListener("click", function (event) {
     event.preventDefault();
     validarCampos();
 });
+
